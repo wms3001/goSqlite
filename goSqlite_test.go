@@ -1,9 +1,10 @@
 package goSqlite
 
 import (
+	"encoding/json"
 	"fmt"
+	"github.com/wms3001/goCommon"
 	"testing"
-	"time"
 )
 
 func TestGoSqlite_Connect(t *testing.T) {
@@ -41,7 +42,7 @@ func TestGoSqlite_Exec(t *testing.T) {
 }
 
 func TestGoSqlite_Insert(t *testing.T) {
-	var resp = &Resp{}
+	var resp = &goCommon.Resp{}
 	goSqlite := &GoSqlite{}
 	goSqlite.Db = "D:\\db\\test.db"
 	goSqlite.Connect()
@@ -55,7 +56,14 @@ func TestGoSqlite_Insert(t *testing.T) {
 	} else {
 		resp.Code = 1
 		resp.Message = "success"
-		resp.Data, _ = re.LastInsertId()
+		lastId, _ := re.LastInsertId()
+		roweffct, _ := re.RowsAffected()
+		data := make(map[string]int64)
+		data["lastInsertId"] = lastId
+		data["rowsAffected"] = roweffct
+		dataType, _ := json.Marshal(data)
+		dataString := string(dataType)
+		resp.Data = dataString
 	}
 	fmt.Println(resp)
 	//s1 := []interface{}{"guoke", "2012-12-09"}
@@ -64,7 +72,7 @@ func TestGoSqlite_Insert(t *testing.T) {
 }
 
 func TestGoSqlite_Delete(t *testing.T) {
-	var resp = &Resp{}
+	var resp = &goCommon.Resp{}
 	goSqlite := &GoSqlite{}
 	goSqlite.Db = "D:\\db\\test.db"
 	goSqlite.Connect()
@@ -78,13 +86,20 @@ func TestGoSqlite_Delete(t *testing.T) {
 	} else {
 		resp.Code = 1
 		resp.Message = "success"
-		resp.Data = re.RowsAffected
+		lastId, _ := re.LastInsertId()
+		roweffct, _ := re.RowsAffected()
+		data := make(map[string]int64)
+		data["lastInsertId"] = lastId
+		data["rowsAffected"] = roweffct
+		dataType, _ := json.Marshal(data)
+		dataString := string(dataType)
+		resp.Data = dataString
 	}
 	fmt.Println(resp)
 }
 
 func TestGoSqlite_Update(t *testing.T) {
-	var resp = &Resp{}
+	var resp = &goCommon.Resp{}
 	goSqlite := &GoSqlite{}
 	goSqlite.Db = "D:\\db\\test.db"
 	goSqlite.Connect()
@@ -98,9 +113,22 @@ func TestGoSqlite_Update(t *testing.T) {
 	} else {
 		resp.Code = 1
 		resp.Message = "success"
-		resp.Data = re.RowsAffected
+		lastId, _ := re.LastInsertId()
+		roweffct, _ := re.RowsAffected()
+		data := make(map[string]int64)
+		data["lastInsertId"] = lastId
+		data["rowsAffected"] = roweffct
+		dataType, _ := json.Marshal(data)
+		dataString := string(dataType)
+		resp.Data = dataString
 	}
 	fmt.Println(resp)
+}
+
+type Tttttt struct {
+	Id      int64  `json:"id"`
+	Name    string `json:"name"`
+	Created string `json:"created"`
 }
 
 func TestGoSqlite_Select(t *testing.T) {
@@ -110,17 +138,8 @@ func TestGoSqlite_Select(t *testing.T) {
 	defer goSqlite.Close()
 	goSqlite.Sql = `SELECT * FROM user`
 	resp := goSqlite.Select()
-	for resp.Rows.Next() {
-		var uid int
-		var name string
-		var created time.Time
-		err := resp.Rows.Scan(&uid, &name, &created)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-
-		fmt.Println(uid)
-		fmt.Println(name)
-		fmt.Println(created)
-	}
+	var ttt []Tttttt
+	fmt.Println(resp.Data)
+	json.Unmarshal([]byte(resp.Data), &ttt)
+	fmt.Println(ttt)
 }
